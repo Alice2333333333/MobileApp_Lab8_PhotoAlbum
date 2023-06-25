@@ -14,9 +14,9 @@ class CameraScreen extends StatefulWidget {
 
 class _CameraScreenState extends State<CameraScreen> {
   late CameraController _cameraController;
-  bool _isRearCameraSelected = true;
+  bool _isRear = true;
 
-  Future takePicture() async {
+  Future takePhoto() async {
     // if (!_cameraController.value.isInitialized) {
     //   return null;
     // }
@@ -25,7 +25,7 @@ class _CameraScreenState extends State<CameraScreen> {
     // }
     // try {
     //   await _cameraController.setFlashMode(FlashMode.off);
-    //   XFile picture = await _cameraController.takePicture();
+    //   XFile picture = await _cameraController.takePhoto();
     //   Navigator.push(
     //       context,
     //       MaterialPageRoute(
@@ -75,33 +75,33 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Stack(
         children: [
-          (_cameraController.value.isInitialized)
+          _cameraController.value.isInitialized
               ? CameraPreview(_cameraController)
-              : Container(
-                  color: Colors.black,
-                  child: const Center(
-                    child: CircularProgressIndicator(),
-                  ),
-                ),
+              : Container(color: Colors.black45),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.20,
-              decoration: const BoxDecoration(
-                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-                color: Colors.black,
-              ),
+              height: MediaQuery.of(context).size.height * 0.2,
+              color: Colors.black87,
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(),
                   Expanded(
-                    child: IconButton(
-                      onPressed: takePicture,
-                      iconSize: 50,
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      icon: const Icon(Icons.circle, color: Colors.white),
+                    child: Container(
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        padding: EdgeInsets.zero,
+                        onPressed: takePhoto,
+                        iconSize: 70,
+                        icon: const Icon(
+                          Icons.circle,
+                          color: Colors.black87,
+                        ),
+                      ),
                     ),
                   ),
                   Expanded(
@@ -113,10 +113,8 @@ class _CameraScreenState extends State<CameraScreen> {
                         color: Colors.white,
                       ),
                       onPressed: () {
-                        setState(() =>
-                            _isRearCameraSelected = !_isRearCameraSelected);
-                        initCamera(
-                            widget.cameras[_isRearCameraSelected ? 0 : 1]);
+                        _isRear = !_isRear;
+                        initCamera(widget.cameras[_isRear ? 0 : 1]);
                       },
                     ),
                   ),
