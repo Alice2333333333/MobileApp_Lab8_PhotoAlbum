@@ -65,6 +65,7 @@ class _CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black87,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         iconTheme: IconThemeData(
@@ -75,16 +76,12 @@ class _CameraScreenState extends State<CameraScreen> {
       ),
       body: Stack(
         children: [
-          _cameraController.value.isInitialized
-              ? CameraPreview(_cameraController)
-              : Container(color: Colors.black45),
+          CameraPreview(_cameraController),
           Align(
             alignment: Alignment.bottomCenter,
-            child: Container(
+            child: SizedBox(
               height: MediaQuery.of(context).size.height * 0.2,
-              color: Colors.black87,
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const Spacer(),
                   Expanded(
