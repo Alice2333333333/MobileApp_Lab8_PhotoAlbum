@@ -7,7 +7,6 @@ import 'package:camera/camera.dart';
 
 import 'package:photo_album/screens/camera_screen.dart';
 import 'package:photo_album/components/images_list.dart';
-import 'package:photo_album/components/expandable_fab.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -55,33 +54,6 @@ class DashboardScreen extends StatelessWidget {
         icon: const Icon(Icons.add_a_photo),
         label: const Text("Add Photo"),
       ),
-      // ExpandableFab(
-      //   distance: 75,
-      //   children: [
-      //     ActionButton(
-      //       onPressed: () async {
-      //         await availableCameras().then(
-      //           (value) => Navigator.push(
-      //             context,
-      //             MaterialPageRoute(
-      //               builder: (context) => CameraScreen(cameras: value),
-      //             ),
-      //           ),
-      //         );
-      //       },
-      //       icon: const Icon(Icons.camera_alt),
-      //     ),
-      //     ActionButton(
-      //       onPressed: () => Navigator.push(
-      //         context,
-      //         MaterialPageRoute(
-      //           builder: (context) => const GalleryScreen(),
-      //         ),
-      //       ),
-      //       icon: const Icon(Icons.insert_photo),
-      //     ),
-      //   ],
-      // ),
     );
   }
 }
