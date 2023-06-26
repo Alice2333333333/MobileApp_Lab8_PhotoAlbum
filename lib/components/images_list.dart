@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+
+import 'package:photo_album/models/image_data.dart';
+import 'package:photo_album/components/cached_image.dart';
+import 'package:photo_album/screens/detail_screen.dart';
 
 class ImagesList extends StatefulWidget {
   const ImagesList({super.key});
@@ -10,7 +13,7 @@ class ImagesList extends StatefulWidget {
 }
 
 class _ImagesListState extends State<ImagesList> {
-  late final List<String> _images = [];
+  late final List<ImageData> _images = [];
   late final Future futureGetImages;
 
   Future<void> getImages() async {
@@ -20,8 +23,15 @@ class _ImagesListState extends State<ImagesList> {
       const ListOptions(maxResults: 4),
     );
     for (var item in listResult.items) {
-      final imageUrl = await storageRef.child(item.fullPath).getDownloadURL();
-      _images.add(imageUrl);
+      final itemRef = storageRef.child(item.fullPath);
+      final imageUrl = await itemRef.getDownloadURL();
+      final metadata = await itemRef.getMetadata();
+      final image = ImageData(
+        path: item.fullPath,
+        url: imageUrl,
+        metadata: metadata.customMetadata,
+      );
+      _images.add(image);
     }
   }
 
@@ -41,7 +51,15 @@ class _ImagesListState extends State<ImagesList> {
             padding: const EdgeInsets.symmetric(vertical: 2.5),
             itemCount: _images.length < 4 ? _images.length : 4,
             itemBuilder: (context, index) {
-              return Photo(imageUrl: _images[index]);
+              return Photo(
+                imageUrl: _images[index].url,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => DetailScreen(image: _images[index]),
+                  ),
+                ),
+              );
             },
           );
         }
@@ -54,9 +72,14 @@ class _ImagesListState extends State<ImagesList> {
 }
 
 class Photo extends StatelessWidget {
-  const Photo({super.key, required this.imageUrl});
+  const Photo({
+    super.key,
+    required this.imageUrl,
+    required this.onTap,
+  });
 
   final String imageUrl;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -65,18 +88,9 @@ class Photo extends StatelessWidget {
         horizontal: 5.0,
         vertical: 2.5,
       ),
-      child: CachedNetworkImage(
-        imageUrl: imageUrl,
-        placeholder: (context, url) => const Padding(
-          padding: EdgeInsets.symmetric(vertical: 25.0),
-          child: Center(
-            child: CircularProgressIndicator(),
-          ),
-        ),
-        errorWidget: (context, url, error) => const Padding(
-          padding: EdgeInsets.symmetric(vertical: 25.0),
-          child: Icon(Icons.error),
-        ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: CachedImage(imageUrl: imageUrl),
       ),
     );
   }

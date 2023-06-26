@@ -3,6 +3,8 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 
+import 'package:photo_album/screens/gallery_screen.dart';
+
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key, required this.cameras});
 
@@ -83,32 +85,34 @@ class _CameraScreenState extends State<CameraScreen> {
               height: MediaQuery.of(context).size.height * 0.2,
               child: Row(
                 children: [
-                  const Spacer(),
+                  Expanded(
+                    child: BottomIcon(
+                      icon: Icons.insert_photo,
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const GalleryScreen(),
+                        ),
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: Container(
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: IconButton(
-                        padding: EdgeInsets.zero,
+                      child: BottomIcon(
+                        icon: Icons.circle,
                         onPressed: takePhoto,
                         iconSize: 70,
-                        icon: const Icon(
-                          Icons.circle,
-                          color: Colors.black87,
-                        ),
+                        color: Colors.black87,
                       ),
                     ),
                   ),
                   Expanded(
-                    child: IconButton(
-                      padding: EdgeInsets.zero,
-                      iconSize: 30,
-                      icon: const Icon(
-                        Icons.flip_camera_ios,
-                        color: Colors.white,
-                      ),
+                    child: BottomIcon(
+                      icon: Icons.flip_camera_ios,
                       onPressed: () {
                         _isRear = !_isRear;
                         initCamera(widget.cameras[_isRear ? 0 : 1]);
@@ -121,6 +125,34 @@ class _CameraScreenState extends State<CameraScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+class BottomIcon extends StatelessWidget {
+  const BottomIcon({
+    super.key,
+    required this.icon,
+    required this.onPressed,
+    this.iconSize = 30.0,
+    this.color = Colors.white,
+  });
+
+  final IconData icon;
+  final VoidCallback onPressed;
+  final double iconSize;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      padding: EdgeInsets.zero,
+      iconSize: iconSize,
+      icon: Icon(
+        icon,
+        color: color,
+      ),
+      onPressed: onPressed,
     );
   }
 }
