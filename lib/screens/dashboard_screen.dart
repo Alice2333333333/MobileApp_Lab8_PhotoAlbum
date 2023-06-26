@@ -3,10 +3,11 @@ import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:camera/camera.dart';
+import 'package:image_picker/image_picker.dart';
 
-import 'package:photo_album/screens/camera_screen.dart';
+import 'package:photo_album/screens/edit_screen.dart';
 import 'package:photo_album/components/images_list.dart';
+import 'package:photo_album/components/expandable_fab.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -32,6 +33,25 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
+  void pickImage(BuildContext context, ImageSource source) async {
+    try {
+      final XFile? pickedFile = await ImagePicker().pickImage(
+        source: source,
+      );
+
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => EditScreen(imagePath: pickedFile!.path),
+          ),
+        );
+      }
+    } catch (e) {
+      log(e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -40,19 +60,24 @@ class DashboardScreen extends StatelessWidget {
         automaticallyImplyLeading: false,
       ),
       body: const ImagesList(),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          await availableCameras().then(
-            (value) => Navigator.push(
+      floatingActionButton: ExpandableFab(
+        distance: 75,
+        children: [
+          ActionButton(
+            onPressed: () => pickImage(
               context,
-              MaterialPageRoute(
-                builder: (context) => CameraScreen(cameras: value),
-              ),
+              ImageSource.camera,
             ),
-          );
-        },
-        icon: const Icon(Icons.add_a_photo),
-        label: const Text("Add Photo"),
+            icon: const Icon(Icons.camera_alt),
+          ),
+          ActionButton(
+            onPressed: () => pickImage(
+              context,
+              ImageSource.gallery,
+            ),
+            icon: const Icon(Icons.insert_photo),
+          ),
+        ],
       ),
     );
   }

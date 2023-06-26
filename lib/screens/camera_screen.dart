@@ -2,8 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
-
-import 'package:photo_album/screens/gallery_screen.dart';
+import 'package:image_picker/image_picker.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key, required this.cameras});
@@ -17,6 +16,16 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreenState extends State<CameraScreen> {
   late CameraController _cameraController;
   bool _isRear = true;
+
+  void pickImage() async {
+    try {
+      final XFile? pickedFile = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+      );
+    } catch (e) {
+      log(e.toString());
+    }
+  }
 
   Future takePhoto() async {
     // if (!_cameraController.value.isInitialized) {
@@ -88,12 +97,7 @@ class _CameraScreenState extends State<CameraScreen> {
                   Expanded(
                     child: BottomIcon(
                       icon: Icons.insert_photo,
-                      onPressed: () => Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const GalleryScreen(),
-                        ),
-                      ),
+                      onPressed: pickImage,
                     ),
                   ),
                   Expanded(
