@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 
 import 'package:photo_album/screens/detail_screen.dart';
 import 'package:photo_album/components/images_list.dart';
@@ -22,13 +23,12 @@ class DashboardScreen extends StatelessWidget {
       final Uint8List data = bytes.buffer.asUint8List();
       final customMetadata = SettableMetadata(
         customMetadata: {
-          "location": "Yosemite, CA, USA",
-          "activity": "Hiking",
+          "description": "Mountain",
+          "location": "Serdang",
+          "datetime": DateFormat.yMMMEd().add_jms().format(DateTime.now()),
         },
       );
       await mountainRef.putData(data, customMetadata);
-      final metadata = await mountainRef.getMetadata();
-      log(metadata.customMetadata.toString());
     } on FirebaseException catch (e) {
       log(e.toString());
     }

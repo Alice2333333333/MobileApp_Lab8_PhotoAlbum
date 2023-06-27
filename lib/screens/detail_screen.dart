@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:photo_album/components/image_caller.dart';
 import 'package:photo_album/models/image_data.dart';
@@ -20,7 +21,27 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  late bool editMode = widget.editMode;
+  late bool editMode;
+  late String description;
+  late String datetime;
+  late String location;
+  late TextEditingController descrController;
+
+  @override
+  void initState() {
+    super.initState();
+    editMode = widget.editMode;
+    description = widget.image.metadata!['description'] ?? '';
+    datetime = widget.image.metadata!['datetime'] ?? '';
+    location = widget.image.metadata!['location'] ?? '';
+    descrController = TextEditingController(text: description);
+  }
+
+  @override
+  void dispose() {
+    descrController.dispose();
+    super.dispose();
+  }
 
   Widget infoText(String title, String text, {bool editMode = false}) {
     return Padding(
@@ -37,24 +58,21 @@ class _DetailScreenState extends State<DetailScreen> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          editMode ? descriptionField(text) : Text(text),
+          editMode ? descriptionField() : Text(text),
         ],
       ),
     );
   }
 
-  TextFormField descriptionField(String text) {
-    return TextFormField(
-      initialValue: text,
+  TextField descriptionField() {
+    return TextField(
+      controller: descrController,
       maxLines: 3,
       autofocus: true,
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.all(8.0),
       ),
-      onChanged: (value) {
-        log(value);
-      },
     );
   }
 
@@ -81,31 +99,35 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           infoText(
             "Description:",
-            "abc",
+            description,
             editMode: editMode,
           ),
           infoText(
+            "Taken on:",
+            datetime,
+          ),
+          infoText(
             "Location:",
-            "abc",
+            location,
           ),
           infoText(
-            "Date:",
-            "abc",
-          ),
-          infoText(
-            "Time:",
-            "abc",
-          ),
-          infoText(
-            "Local path:",
-            "abcooooooooooooooooooooooooooo",
+            "Collection:",
+            widget.image.ref,
           ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
+        onPressed: () async {
           if (editMode) {
-            log("save");
+            final storageRef = FirebaseStorage.instance.ref();
+            final imageRef = storageRef.child(widget.image.ref);
+            final newMetadata = SettableMetadata(
+              customMetadata: {
+                "description": descrController.text,
+              },
+            );
+            await imageRef.updateMetadata(newMetadata);
+            if (context.mounted) Navigator.pop(context);
           }
           setState(() {
             editMode = !editMode;
