@@ -66,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (authenticated && context.mounted) {
-        Navigator.push(
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(
             builder: (context) => const DashboardScreen(),

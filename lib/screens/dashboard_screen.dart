@@ -5,46 +5,32 @@ import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 import 'package:photo_album/screens/detail_screen.dart';
 import 'package:photo_album/components/images_list.dart';
 import 'package:photo_album/components/expandable_fab.dart';
 import 'package:photo_album/models/image_data.dart';
+import 'package:photo_album/services/location.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
 
-  void saveData() async {
-    final storageRef = FirebaseStorage.instance.ref();
-    final mountainRef = storageRef.child("images/mountains.jpg");
-
+  Future getImage(BuildContext context, ImageSource source) async {
     try {
-      final ByteData bytes = await rootBundle.load('assets/mountains.jpg');
-      final Uint8List data = bytes.buffer.asUint8List();
-      final customMetadata = SettableMetadata(
-        customMetadata: {
-          "description": "Mountain",
-          "location": "Serdang",
-          "datetime": DateFormat.yMMMEd().add_jms().format(DateTime.now()),
-        },
-      );
-      await mountainRef.putData(data, customMetadata);
-    } on FirebaseException catch (e) {
-      log(e.toString());
-    }
-  }
-
-  void onPressedAction(BuildContext context, ImageSource source) async {
-    try {
-      final pickedFile = await ImagePicker().pickImage(
-        source: source,
-      );
-
+      final pickedFile =
+          await ImagePicker().pickImage(source: source).catchError((err) {
+        Fluttertoast.showToast(msg: err.toString());
+        return null;
+      });
+      final position = await determinePosition();
       final image = ImageData(
         path: pickedFile!.path,
+        name: pickedFile.name,
+        dateTime: DateFormat.yMMMEd().add_jms().format(DateTime.now()),
+        location: position.toString(),
         isUrl: false,
       );
-
       if (context.mounted) {
         Navigator.push(
           context,
@@ -66,21 +52,20 @@ class DashboardScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Photo Album"),
-        automaticallyImplyLeading: false,
       ),
       body: const ImagesList(),
       floatingActionButton: ExpandableFab(
         distance: 75,
         children: [
           ActionButton(
-            onPressed: () => onPressedAction(
+            onPressed: () => getImage(
               context,
               ImageSource.camera,
             ),
             icon: const Icon(Icons.camera_alt),
           ),
           ActionButton(
-            onPressed: () => onPressedAction(
+            onPressed: () => getImage(
               context,
               ImageSource.gallery,
             ),

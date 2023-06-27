@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:geolocator/geolocator.dart';
 
 import 'package:photo_album/models/image_data.dart';
 import 'package:photo_album/components/image_caller.dart';
@@ -25,13 +27,14 @@ class _ImagesListState extends State<ImagesList> {
     for (var item in listResult.items) {
       final itemRef = storageRef.child(item.fullPath);
       final imageUrl = await itemRef.getDownloadURL();
-      final metadata = await itemRef.getMetadata();
-      final image = ImageData(
-        ref: item.fullPath,
-        path: imageUrl,
-        metadata: metadata.customMetadata,
-      );
-      _images.add(image);
+      // final image = ImageData(
+      //   collection: item.fullPath,
+      //   path: imageUrl,
+      //   dateTime: "fff",
+      //   location: Position.instance,
+      //   // metadata: metadata.customMetadata,
+      // );
+      // _images.add(image);
     }
   }
 

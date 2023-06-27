@@ -1,7 +1,12 @@
 import 'dart:developer';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:intl/intl.dart';
 
 import 'package:photo_album/components/image_caller.dart';
 import 'package:photo_album/models/image_data.dart';
@@ -21,26 +26,44 @@ class DetailScreen extends StatefulWidget {
 }
 
 class _DetailScreenState extends State<DetailScreen> {
+  final FirebaseStorage storage = FirebaseStorage.instance;
+  final FirebaseFirestore firestore = FirebaseFirestore.instance;
+
   late bool editMode;
-  late String description;
-  late String datetime;
-  late String location;
+  late List<String> location;
   late TextEditingController descrController;
 
   @override
   void initState() {
     super.initState();
     editMode = widget.editMode;
-    description = widget.image.metadata!['description'] ?? '';
-    datetime = widget.image.metadata!['datetime'] ?? '';
-    location = widget.image.metadata!['location'] ?? '';
-    descrController = TextEditingController(text: description);
+    descrController = TextEditingController(text: widget.image.description);
+    location = widget.image.location.split(", ");
   }
 
   @override
   void dispose() {
     descrController.dispose();
     super.dispose();
+  }
+
+  Future uploadFile() async {
+    try {
+      final ref = storage.ref().child(widget.image.name);
+      await ref.putFile(File(widget.image.path));
+      final imageUrl = await ref.getDownloadURL();
+      final folder1 = firestore.collection('folder1');
+      folder1.add({
+        'description': descrController.text,
+        'datetime': widget.image.dateTime,
+        'location': widget.image.location,
+        'url': imageUrl,
+      }).then((doc)async {
+        Fluttertoast.showToast(msg: "Upload success");
+      });
+    } on FirebaseException catch (e) {
+      Fluttertoast.showToast(msg: e.toString());
+    }
   }
 
   Widget infoText(String title, String text, {bool editMode = false}) {
@@ -70,9 +93,9 @@ class _DetailScreenState extends State<DetailScreen> {
       maxLines: 3,
       autofocus: true,
       decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        contentPadding: EdgeInsets.all(8.0),
-      ),
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.all(8.0),
+          hintText: "Write something..."),
     );
   }
 
@@ -99,34 +122,32 @@ class _DetailScreenState extends State<DetailScreen> {
           ),
           infoText(
             "Description:",
-            description,
+            widget.image.description,
             editMode: editMode,
           ),
           infoText(
             "Taken on:",
-            datetime,
+            widget.image.dateTime,
           ),
           infoText(
             "Location:",
-            location,
+            "${location[0]}\n${location[1]}",
           ),
-          infoText(
-            "Collection:",
-            widget.image.ref,
-          ),
+          if (widget.image.isUrl) ...[
+            infoText(
+              "Collection:",
+              widget.image.collection,
+            ),
+          ]
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           if (editMode) {
-            final storageRef = FirebaseStorage.instance.ref();
-            final imageRef = storageRef.child(widget.image.ref);
-            final newMetadata = SettableMetadata(
-              customMetadata: {
-                "description": descrController.text,
-              },
-            );
-            await imageRef.updateMetadata(newMetadata);
+            if (widget.image.isUrl) {
+            } else {
+              uploadFile();
+            }
             if (context.mounted) Navigator.pop(context);
           }
           setState(() {
