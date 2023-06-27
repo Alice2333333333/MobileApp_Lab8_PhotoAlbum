@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 
-import 'package:photo_album/components/cached_image.dart';
+import 'package:photo_album/components/image_caller.dart';
 import 'package:photo_album/models/image_data.dart';
 
 class DetailScreen extends StatelessWidget {
   const DetailScreen({
     super.key,
     required this.image,
+    this.editMode = false,
   });
 
   final ImageData image;
+  final bool editMode;
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +26,9 @@ class DetailScreen extends StatelessWidget {
               horizontal: 5.0,
               vertical: 5.0,
             ),
-            child: CachedImage(imageUrl: image.url),
+            child: image.isUrl
+                ? CachedImage(imageUrl: image.path)
+                : PickedImage(imagePath: image.path),
           ),
           const InfoText(
             title: "Description:",

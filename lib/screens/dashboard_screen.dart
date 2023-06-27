@@ -5,9 +5,10 @@ import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
-import 'package:photo_album/screens/edit_screen.dart';
+import 'package:photo_album/screens/detail_screen.dart';
 import 'package:photo_album/components/images_list.dart';
 import 'package:photo_album/components/expandable_fab.dart';
+import 'package:photo_album/models/image_data.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -33,17 +34,25 @@ class DashboardScreen extends StatelessWidget {
     }
   }
 
-  void pickImage(BuildContext context, ImageSource source) async {
+  void onPressedAction(BuildContext context, ImageSource source) async {
     try {
-      final XFile? pickedFile = await ImagePicker().pickImage(
+      final pickedFile = await ImagePicker().pickImage(
         source: source,
+      );
+
+      final image = ImageData(
+        path: pickedFile!.path,
+        isUrl: false,
       );
 
       if (context.mounted) {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => EditScreen(imagePath: pickedFile!.path),
+            builder: (context) => DetailScreen(
+              image: image,
+              editMode: true,
+            ),
           ),
         );
       }
@@ -64,14 +73,14 @@ class DashboardScreen extends StatelessWidget {
         distance: 75,
         children: [
           ActionButton(
-            onPressed: () => pickImage(
+            onPressed: () => onPressedAction(
               context,
               ImageSource.camera,
             ),
             icon: const Icon(Icons.camera_alt),
           ),
           ActionButton(
-            onPressed: () => pickImage(
+            onPressed: () => onPressedAction(
               context,
               ImageSource.gallery,
             ),

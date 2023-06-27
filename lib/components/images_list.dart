@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 import 'package:photo_album/models/image_data.dart';
-import 'package:photo_album/components/cached_image.dart';
+import 'package:photo_album/components/image_caller.dart';
 import 'package:photo_album/screens/detail_screen.dart';
 
 class ImagesList extends StatefulWidget {
@@ -27,8 +27,8 @@ class _ImagesListState extends State<ImagesList> {
       final imageUrl = await itemRef.getDownloadURL();
       final metadata = await itemRef.getMetadata();
       final image = ImageData(
-        path: item.fullPath,
-        url: imageUrl,
+        ref: item.fullPath,
+        path: imageUrl,
         metadata: metadata.customMetadata,
       );
       _images.add(image);
@@ -52,7 +52,7 @@ class _ImagesListState extends State<ImagesList> {
             itemCount: _images.length < 4 ? _images.length : 4,
             itemBuilder: (context, index) {
               return Photo(
-                imageUrl: _images[index].url,
+                imageUrl: _images[index].path,
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(

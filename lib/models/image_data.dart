@@ -1,11 +1,13 @@
 class ImageData {
   ImageData({
     required this.path,
-    required this.url,
     this.metadata,
+    this.ref = "images",
+    this.isUrl = true,
   });
 
   final String path;
-  final String url;
   final Map<String, String>? metadata;
+  final String ref;
+  final bool isUrl;
 }
