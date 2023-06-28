@@ -1,24 +1,23 @@
-import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import 'package:photo_album/components/components.dart';
 import 'package:photo_album/models/models.dart';
+import 'package:photo_album/providers/image_data_provider.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({
     super.key,
-    required this.image,
+    required this.imageData,
     this.editMode = false,
   });
 
-  final ImageData image;
+  final ImageData imageData;
   final bool editMode;
 
   @override
@@ -26,40 +25,65 @@ class DetailPage extends StatefulWidget {
 }
 
 class _DetailPageState extends State<DetailPage> {
-  final FirebaseStorage storage = FirebaseStorage.instance;
-  final FirebaseFirestore firestore = FirebaseFirestore.instance;
-
   late bool editMode;
-  late List<String> location;
-  late TextEditingController descrController;
+  late ImageData imageData;
+  late TextEditingController controllerDescr;
+  late final imageDataProvider = context.read<ImageDataProvider>();
 
   @override
   void initState() {
     super.initState();
     editMode = widget.editMode;
-    descrController = TextEditingController(text: widget.image.description);
-    location = widget.image.location.split(", -");
+    imageData = widget.imageData;
+    controllerDescr = TextEditingController(text: imageData.description);
   }
 
   @override
   void dispose() {
-    descrController.dispose();
+    controllerDescr.dispose();
     super.dispose();
   }
 
   Future uploadFile() async {
+    UploadTask uploadTask = imageDataProvider.uploadFile(
+      File(imageData.path),
+      imageData.name,
+    );
     try {
-      final ref = storage.ref().child(widget.image.name);
-      await ref.putFile(File(widget.image.path));
-      final imageUrl = await ref.getDownloadURL();
-      final folder1 = firestore.collection('folder1');
-      folder1.add({
-        'description': descrController.text,
-        'datetime': widget.image.dateTime,
-        'location': widget.image.location,
+      TaskSnapshot snapshot = await uploadTask;
+      final imageUrl = await snapshot.ref.getDownloadURL();
+
+      final addInfo = {
+        'description': controllerDescr.text,
+        'datetime': imageData.dateTime,
+        'location': imageData.location,
         'url': imageUrl,
-      }).then((doc)async {
+      };
+
+      imageDataProvider
+          .addDataFirestore("folder1", imageData.name, addInfo)
+          .then((data) {
         Fluttertoast.showToast(msg: "Upload success");
+      }).catchError((err) {
+        Fluttertoast.showToast(msg: err.toString());
+      });
+    } on FirebaseException catch (e) {
+      Fluttertoast.showToast(msg: e.toString());
+    }
+  }
+
+  Future updateDetails() async {
+    try {
+      final updateInfo = {
+        'description': controllerDescr.text,
+      };
+
+      imageDataProvider
+          .updateDataFirestore("folder1", imageData.name, updateInfo)
+          .then((data) {
+        Fluttertoast.showToast(msg: "Update success");
+      }).catchError((err) {
+        Fluttertoast.showToast(msg: err.toString());
       });
     } on FirebaseException catch (e) {
       Fluttertoast.showToast(msg: e.toString());
@@ -89,7 +113,7 @@ class _DetailPageState extends State<DetailPage> {
 
   TextField descriptionField() {
     return TextField(
-      controller: descrController,
+      controller: controllerDescr,
       maxLines: 3,
       autofocus: true,
       decoration: const InputDecoration(
@@ -116,35 +140,34 @@ class _DetailPageState extends State<DetailPage> {
               horizontal: 5.0,
               vertical: 2.5,
             ),
-            child: widget.image.isUrl
-                ? CachedImage(imageUrl: widget.image.path)
-                : PickedImage(imagePath: widget.image.path),
+            child: imageData.isUrl
+                ? CachedImage(imageUrl: imageData.path)
+                : PickedImage(imagePath: imageData.path),
           ),
           infoText(
             "Description:",
-            widget.image.description,
+            imageData.description,
             editMode: editMode,
           ),
           infoText(
             "Taken on:",
-            widget.image.dateTime,
+            DateFormat.yMMMEd().add_jms().format(imageData.dateTime.toDate()),
           ),
           infoText(
             "Location:",
-            "${location[0]}\n${location[1]}",
+            "Latitude: ${imageData.location.latitude}\nLongitude: ${imageData.location.longitude}",
           ),
-          if (widget.image.isUrl) ...[
-            infoText(
-              "Collection:",
-              widget.image.collection,
-            ),
-          ]
+          infoText(
+            "Collection:",
+            imageData.collection,
+          ),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           if (editMode) {
-            if (widget.image.isUrl) {
+            if (imageData.isUrl) {
+              updateDetails();
             } else {
               uploadFile();
             }
