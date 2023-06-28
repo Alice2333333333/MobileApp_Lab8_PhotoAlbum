@@ -3,9 +3,9 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:geolocator/geolocator.dart';
 
-import 'package:photo_album/models/image_data.dart';
-import 'package:photo_album/components/image_caller.dart';
-import 'package:photo_album/screens/detail_screen.dart';
+import 'package:photo_album/pages/pages.dart';
+import 'package:photo_album/components/components.dart';
+import 'package:photo_album/models/models.dart';
 
 class ImagesList extends StatefulWidget {
   const ImagesList({super.key});
@@ -59,7 +59,7 @@ class _ImagesListState extends State<ImagesList> {
                 onTap: () => Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => DetailScreen(image: _images[index]),
+                    builder: (context) => DetailPage(image: _images[index]),
                   ),
                 ),
               );

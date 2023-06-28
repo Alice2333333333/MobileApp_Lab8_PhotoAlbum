@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 
-import 'package:photo_album/screens/home_screen.dart';
-import 'package:photo_album/models/light_state.dart';
+import 'package:photo_album/pages/pages.dart';
+import 'package:photo_album/providers/providers.dart';
 import 'package:photo_album/firebase_options.dart';
 
 Future<void> main() async {
@@ -23,7 +23,7 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => LightStateProvider(),
+          create: (context) => LightProvider(),
         ),
       ],
       child: const Main(),
@@ -36,11 +36,11 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int luxValue = Provider.of<LightStateProvider>(context).luxValue;
+    int luxValue = Provider.of<LightProvider>(context).luxValue;
     return MaterialApp(
       title: 'Photo Album',
       theme: luxValue < 10 ? ThemeData.dark() : ThemeData.light(),
-      home: const HomeScreen(),
+      home: const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }

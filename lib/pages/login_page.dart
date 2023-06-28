@@ -6,23 +6,23 @@ import 'package:local_auth/local_auth.dart';
 import 'package:light/light.dart';
 import 'package:provider/provider.dart';
 
-import 'package:photo_album/screens/dashboard_screen.dart';
-import 'package:photo_album/models/light_state.dart';
+import 'package:photo_album/pages/pages.dart';
+import 'package:photo_album/providers/providers.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _LoginPageState extends State<LoginPage> {
   final LocalAuthentication localAuth = LocalAuthentication();
 
   late Light _light;
   late StreamSubscription _subscription;
 
-  late LightStateProvider lightStateProvider;
+  late LightProvider lightStateProvider;
 
   void onData(int luxValue) async {
     lightStateProvider.luxValue = luxValue;
@@ -54,7 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    lightStateProvider = Provider.of<LightStateProvider>(context);
+    lightStateProvider = Provider.of<LightProvider>(context);
   }
 
   void onTapAuth() async {
@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => const DashboardScreen(),
+            builder: (context) => const DashboardPage(),
           ),
         );
       }

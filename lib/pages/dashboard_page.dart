@@ -7,14 +7,13 @@ import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import 'package:photo_album/screens/detail_screen.dart';
-import 'package:photo_album/components/images_list.dart';
-import 'package:photo_album/components/expandable_fab.dart';
-import 'package:photo_album/models/image_data.dart';
-import 'package:photo_album/services/location.dart';
+import 'package:photo_album/pages/pages.dart';
+import 'package:photo_album/components/components.dart';
+import 'package:photo_album/models/models.dart';
+import 'package:photo_album/services/services.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class DashboardPage extends StatelessWidget {
+  const DashboardPage({super.key});
 
   Future getImage(BuildContext context, ImageSource source) async {
     try {
@@ -35,7 +34,7 @@ class DashboardScreen extends StatelessWidget {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => DetailScreen(
+            builder: (context) => DetailPage(
               image: image,
               editMode: true,
             ),

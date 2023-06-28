@@ -8,11 +8,11 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:intl/intl.dart';
 
-import 'package:photo_album/components/image_caller.dart';
-import 'package:photo_album/models/image_data.dart';
+import 'package:photo_album/components/components.dart';
+import 'package:photo_album/models/models.dart';
 
-class DetailScreen extends StatefulWidget {
-  const DetailScreen({
+class DetailPage extends StatefulWidget {
+  const DetailPage({
     super.key,
     required this.image,
     this.editMode = false,
@@ -22,10 +22,10 @@ class DetailScreen extends StatefulWidget {
   final bool editMode;
 
   @override
-  State<DetailScreen> createState() => _DetailScreenState();
+  State<DetailPage> createState() => _DetailPageState();
 }
 
-class _DetailScreenState extends State<DetailScreen> {
+class _DetailPageState extends State<DetailPage> {
   final FirebaseStorage storage = FirebaseStorage.instance;
   final FirebaseFirestore firestore = FirebaseFirestore.instance;
 
@@ -38,7 +38,7 @@ class _DetailScreenState extends State<DetailScreen> {
     super.initState();
     editMode = widget.editMode;
     descrController = TextEditingController(text: widget.image.description);
-    location = widget.image.location.split(", ");
+    location = widget.image.location.split(", -");
   }
 
   @override

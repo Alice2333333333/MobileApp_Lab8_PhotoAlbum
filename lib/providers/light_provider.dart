@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class LightStateProvider extends ChangeNotifier {
+class LightProvider extends ChangeNotifier {
   int _luxValue = 0;
 
   int get luxValue => _luxValue;
