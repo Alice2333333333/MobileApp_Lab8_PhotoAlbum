@@ -29,6 +29,7 @@ class _DetailPageState extends State<DetailPage> {
   late bool editMode;
   late ImageData imageData;
   late TextEditingController controllerDescr;
+  late String dropdownFolderValue;
   late final imageDataProvider = context.read<ImageDataProvider>();
 
   @override
@@ -37,6 +38,8 @@ class _DetailPageState extends State<DetailPage> {
     editMode = widget.editMode;
     imageData = widget.imageData;
     controllerDescr = TextEditingController(text: imageData.description);
+    dropdownFolderValue =
+        imageData.folder.isEmpty ? folders.first : imageData.folder;
   }
 
   @override
@@ -45,7 +48,81 @@ class _DetailPageState extends State<DetailPage> {
     super.dispose();
   }
 
-  Future uploadFile() async {
+  @override
+  Widget build(BuildContext context) {
+    final format = DateFormat.yMMMEd().add_jms();
+    final takenOn = format.format(imageData.timestamp.toDate());
+    final latitude = imageData.location.latitude;
+    final longitude = imageData.location.longitude;
+    final location = "Latitude: $latitude\nLongitude: $longitude";
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(AppConstants.detailTitle),
+        actions: [
+          deleteButton(),
+        ],
+      ),
+      body: ListView(
+        padding: const EdgeInsets.only(
+          top: 2.5,
+          bottom: 75.0,
+        ),
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 5.0,
+              vertical: 2.5,
+            ),
+            child: imageData.isUrl
+                ? CachedImage(imageUrl: imageData.path)
+                : PickedImage(imagePath: imageData.path),
+          ),
+          detailText(
+            "Description:",
+            imageData.description,
+            editMode: editMode,
+          ),
+          detailText(
+            "Folder:",
+            imageData.folder,
+            editMode: editMode,
+            dropdown: editMode,
+          ),
+          detailText(
+            "Taken on:",
+            takenOn,
+          ),
+          detailText(
+            "Location:",
+            location,
+          ),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          if (editMode) {
+            if (imageData.isUrl) {
+              updateData();
+            } else {
+              addData();
+            }
+            Navigator.pop(context);
+          }
+          setState(() {
+            editMode = !editMode;
+          });
+        },
+        icon: Icon(
+          editMode ? Icons.save : Icons.edit,
+        ),
+        label: Text(
+          editMode ? "Save" : "Edit",
+        ),
+      ),
+    );
+  }
+
+  Future addData() async {
     UploadTask uploadTask = imageDataProvider.uploadFile(
       File(imageData.path),
       imageData.name,
@@ -55,16 +132,15 @@ class _DetailPageState extends State<DetailPage> {
       final imageUrl = await snapshot.ref.getDownloadURL();
 
       final addInfo = {
-        'description': controllerDescr.text,
-        'datetime': imageData.dateTime,
-        'location': imageData.location,
-        'url': imageUrl,
+        FirebaseConstants.description: controllerDescr.text,
+        FirebaseConstants.timestamp: imageData.timestamp,
+        FirebaseConstants.location: imageData.location,
+        FirebaseConstants.folder: dropdownFolderValue,
+        FirebaseConstants.url: imageUrl,
       };
 
-      imageDataProvider
-          .addDataFirestore("folder1", imageData.name, addInfo)
-          .then((data) {
-        Fluttertoast.showToast(msg: "Upload success");
+      imageDataProvider.addDataFirestore(imageData.name, addInfo).then((data) {
+        Fluttertoast.showToast(msg: "Upload successful");
       }).catchError((err) {
         Fluttertoast.showToast(msg: err.toString());
       });
@@ -73,16 +149,17 @@ class _DetailPageState extends State<DetailPage> {
     }
   }
 
-  Future updateDetails() async {
+  Future updateData() async {
     try {
       final updateInfo = {
-        'description': controllerDescr.text,
+        FirebaseConstants.description: controllerDescr.text,
+        FirebaseConstants.folder: dropdownFolderValue,
       };
 
       imageDataProvider
-          .updateDataFirestore("folder1", imageData.name, updateInfo)
+          .updateDataFirestore(imageData.name, updateInfo)
           .then((data) {
-        Fluttertoast.showToast(msg: "Update success");
+        Fluttertoast.showToast(msg: "Update successful");
       }).catchError((err) {
         Fluttertoast.showToast(msg: err.toString());
       });
@@ -91,7 +168,26 @@ class _DetailPageState extends State<DetailPage> {
     }
   }
 
-  Widget infoText(String title, String text, {bool editMode = false}) {
+  Future deleteData() async {
+    Future deleteTask = imageDataProvider.deleteFile(imageData.name);
+    try {
+      imageDataProvider.deleteDataFirestore(imageData.name).then((data) async {
+        await deleteTask;
+        Fluttertoast.showToast(msg: "Delete successful");
+      }).catchError((err) {
+        Fluttertoast.showToast(msg: err.toString());
+      });
+    } on FirebaseException catch (e) {
+      Fluttertoast.showToast(msg: e.toString());
+    }
+  }
+
+  Widget detailText(
+    String title,
+    String text, {
+    bool editMode = false,
+    bool dropdown = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 25.0,
@@ -106,7 +202,11 @@ class _DetailPageState extends State<DetailPage> {
               fontWeight: FontWeight.bold,
             ),
           ),
-          editMode ? descriptionField() : Text(text),
+          editMode
+              ? dropdown
+                  ? dropdownFolder()
+                  : descriptionField()
+              : Text(text),
         ],
       ),
     );
@@ -124,67 +224,62 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.detailTitle),
+  Widget dropdownFolder() {
+    return DropdownButton<String>(
+      isExpanded: true,
+      value: dropdownFolderValue,
+      onChanged: (String? value) {
+        setState(() {
+          dropdownFolderValue = value!;
+        });
+      },
+      items: folders.map<DropdownMenuItem<String>>((String value) {
+        return DropdownMenuItem<String>(
+          value: value,
+          child: Text(value),
+        );
+      }).toList(),
+    );
+  }
+
+  IconButton deleteButton() {
+    return IconButton(
+      icon: const Icon(
+        Icons.delete_forever,
+        color: Colors.redAccent,
       ),
-      body: ListView(
-        padding: const EdgeInsets.only(
-          top: 2.5,
-          bottom: 75.0,
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 5.0,
-              vertical: 2.5,
+      onPressed: () {
+        _delete(context);
+      },
+    );
+  }
+
+  Future<void> _delete(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Are you sure you want to delete this photo?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
             ),
-            child: imageData.isUrl
-                ? CachedImage(imageUrl: imageData.path)
-                : PickedImage(imagePath: imageData.path),
-          ),
-          infoText(
-            "Description:",
-            imageData.description,
-            editMode: editMode,
-          ),
-          infoText(
-            "Taken on:",
-            DateFormat.yMMMEd().add_jms().format(imageData.dateTime.toDate()),
-          ),
-          infoText(
-            "Location:",
-            "Latitude: ${imageData.location.latitude}\nLongitude: ${imageData.location.longitude}",
-          ),
-          infoText(
-            "Collection:",
-            imageData.collection,
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () async {
-          if (editMode) {
-            if (imageData.isUrl) {
-              updateDetails();
-            } else {
-              uploadFile();
-            }
-            if (context.mounted) Navigator.pop(context);
-          }
-          setState(() {
-            editMode = !editMode;
-          });
-        },
-        icon: Icon(
-          editMode ? Icons.save : Icons.edit,
-        ),
-        label: Text(
-          editMode ? "Save" : "Edit",
-        ),
-      ),
+            TextButton(
+              onPressed: () {
+                deleteData();
+                Navigator.of(context)
+                  ..pop()
+                  ..pop();
+              },
+              child: const Text(
+                'Delete',
+                style: TextStyle(color: Colors.redAccent),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

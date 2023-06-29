@@ -57,25 +57,6 @@ class _LoginPageState extends State<LoginPage> {
     lightStateProvider = Provider.of<LightProvider>(context);
   }
 
-  void onTapAuth() async {
-    bool weCanCheckBiometrics = await localAuth.canCheckBiometrics;
-
-    if (weCanCheckBiometrics) {
-      bool authenticated = await localAuth.authenticate(
-        localizedReason: "Authenticate to see your bank statement.",
-      );
-
-      if (authenticated && context.mounted) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const DashboardPage(),
-          ),
-        );
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -100,5 +81,24 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  void onTapAuth() async {
+    bool weCanCheckBiometrics = await localAuth.canCheckBiometrics;
+
+    if (weCanCheckBiometrics) {
+      bool authenticated = await localAuth.authenticate(
+        localizedReason: "Authenticate to see your bank statement.",
+      );
+
+      if (authenticated && context.mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const DashboardPage(),
+          ),
+        );
+      }
+    }
   }
 }

@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
-import 'package:photo_album/models/models.dart';
+import 'package:photo_album/constants/constants.dart';
 
 class ImageDataProvider {
   ImageDataProvider({
@@ -20,35 +20,44 @@ class ImageDataProvider {
     return uploadTask;
   }
 
+  Future deleteFile(String fileName) {
+    Reference reference = firebaseStorage.ref().child(fileName);
+    Future deleteTask = reference.delete();
+    return deleteTask;
+  }
+
   Future<void> addDataFirestore(
-    String collectionPath,
     String docPath,
     Map<String, dynamic> dataNeedAdd,
   ) {
     return firebaseFirestore
-        .collection(collectionPath)
+        .collection(FirebaseConstants.pathImagesCollection)
         .doc(docPath)
         .set(dataNeedAdd);
   }
 
   Future<void> updateDataFirestore(
-    String collectionPath,
     String docPath,
     Map<String, dynamic> dataNeedUpdate,
   ) {
     return firebaseFirestore
-        .collection(collectionPath)
+        .collection(FirebaseConstants.pathImagesCollection)
         .doc(docPath)
         .update(dataNeedUpdate);
   }
 
-  Stream<QuerySnapshot> getImageStream({String docId = '', int limit = 0}) {
+  Future<void> deleteDataFirestore(String docPath) {
     return firebaseFirestore
-        .collection("folder1")
-        // .doc(docId)
-        // .collection(docId)
-        // .orderBy("timestamp", descending: true)
-        // .limit(limit)
+        .collection(FirebaseConstants.pathImagesCollection)
+        .doc(docPath)
+        .delete();
+  }
+
+  Stream<QuerySnapshot> getImagesStream({int limit = 4}) {
+    return firebaseFirestore
+        .collection(FirebaseConstants.pathImagesCollection)
+        .orderBy("timestamp", descending: true)
+        .limit(limit)
         .snapshots();
   }
 }

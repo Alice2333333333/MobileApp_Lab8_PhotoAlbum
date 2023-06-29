@@ -22,76 +22,6 @@ class _DashboardPageState extends State<DashboardPage> {
   late final ImageDataProvider imageDataProvider =
       context.read<ImageDataProvider>();
 
-  Future getImage(BuildContext context, ImageSource source) async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: source).catchError((err) {
-      Fluttertoast.showToast(msg: err.toString());
-      return null;
-    });
-    final dateTime = Timestamp.fromDate(DateTime.now());
-    final position = await determinePosition();
-    final location = GeoPoint(
-      position.latitude,
-      position.longitude,
-    );
-    final imageData = ImageData(
-      path: pickedFile!.path,
-      name: pickedFile.name,
-      dateTime: dateTime,
-      location: location,
-      isUrl: false,
-    );
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetailPage(
-            imageData: imageData,
-            editMode: true,
-          ),
-        ),
-      );
-    }
-  }
-
-  Widget buildListImage() {
-    return StreamBuilder<QuerySnapshot>(
-      stream: imageDataProvider.getImageStream(),
-      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
-        if (snapshot.hasError) {
-          return const Center(
-            child: Text('Something went wrong'),
-          );
-        }
-        if (snapshot.hasData) {
-          final listImage = snapshot.data!.docs;
-          if (listImage.isNotEmpty) {
-            return ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: 2.5),
-              itemCount: listImage.length,
-              itemBuilder: (context, index) => Photo(
-                  imageUrl: listImage[index].get("url"), onTap: () {}
-                  // Navigator.push(
-                  //   context,
-                  //   MaterialPageRoute(
-                  //     builder: (context) => DetailPage(imageData: _images[index]),
-                  //   ),
-                  // ),
-                  ),
-            );
-          } else {
-            return const Center(
-              child: Text("No image here yet..."),
-            );
-          }
-        }
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
-      },
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -120,28 +50,99 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
-}
 
-class Photo extends StatelessWidget {
-  const Photo({
-    super.key,
-    required this.imageUrl,
-    required this.onTap,
-  });
+  Future getImage(BuildContext context, ImageSource source) async {
+    final pickedFile =
+        await ImagePicker().pickImage(source: source).catchError((err) {
+      Fluttertoast.showToast(msg: err.toString());
+      return null;
+    });
+    final timestamp = Timestamp.now();
+    final position = await determinePosition();
+    final location = GeoPoint(
+      position.latitude,
+      position.longitude,
+    );
+    final imageData = ImageData(
+      path: pickedFile!.path,
+      name: pickedFile.name,
+      timestamp: timestamp,
+      location: location,
+      isUrl: false,
+    );
+    if (context.mounted) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DetailPage(
+            imageData: imageData,
+            editMode: true,
+          ),
+        ),
+      );
+    }
+  }
 
-  final String imageUrl;
-  final VoidCallback onTap;
+  Widget buildListImage() {
+    return StreamBuilder<QuerySnapshot>(
+      stream: imageDataProvider.getImagesStream(),
+      builder: (BuildContext context, AsyncSnapshot<QuerySnapshot> snapshot) {
+        if (snapshot.hasError) {
+          return const Center(
+            child: Text("Something went wrong"),
+          );
+        }
+        if (snapshot.hasData) {
+          final listImage = snapshot.data!.docs;
+          if (listImage.isNotEmpty) {
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(vertical: 2.5),
+              itemCount: listImage.length,
+              itemBuilder: (context, index) => buildItem(listImage[index]),
+            );
+          } else {
+            return const Center(
+              child: Text("No photo here yet..."),
+            );
+          }
+        }
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      },
+    );
+  }
 
-  @override
-  Widget build(BuildContext context) {
+  Widget buildItem(DocumentSnapshot document) {
+    final url = document.get(FirebaseConstants.url);
+    final description = document.get(FirebaseConstants.description);
+    final timestamp = document.get(FirebaseConstants.timestamp);
+    final location = document.get(FirebaseConstants.location);
+    final folder = document.get(FirebaseConstants.folder);
+    final id = document.id;
     return Padding(
       padding: const EdgeInsets.symmetric(
         horizontal: 5.0,
         vertical: 2.5,
       ),
       child: GestureDetector(
-        onTap: onTap,
-        child: CachedImage(imageUrl: imageUrl),
+        onTap: () {
+          ImageData imageData = ImageData(
+            path: url,
+            timestamp: timestamp,
+            location: location,
+            name: id,
+            description: description,
+            folder: folder,
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailPage(imageData: imageData),
+            ),
+          );
+        },
+        child: CachedImage(imageUrl: url),
       ),
     );
   }
