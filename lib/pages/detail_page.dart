@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 
 import 'package:photo_album/widgets/widgets.dart';
 import 'package:photo_album/models/models.dart';
-import 'package:photo_album/providers/image_data_provider.dart';
+import 'package:photo_album/providers/providers.dart';
+import 'package:photo_album/constants/constants.dart';
 
 class DetailPage extends StatefulWidget {
   const DetailPage({
@@ -127,7 +128,7 @@ class _DetailPageState extends State<DetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Detail Info"),
+        title: const Text(AppConstants.detailTitle),
       ),
       body: ListView(
         padding: const EdgeInsets.only(

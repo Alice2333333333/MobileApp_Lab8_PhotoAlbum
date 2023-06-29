@@ -6,7 +6,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'package:photo_album/pages/pages.dart';
 import 'package:photo_album/providers/providers.dart';
-import 'package:photo_album/models/models.dart';
+import 'package:photo_album/constants/constants.dart';
 import 'package:photo_album/firebase_options.dart';
 
 Future<void> main() async {
@@ -50,7 +50,7 @@ class Main extends StatelessWidget {
   Widget build(BuildContext context) {
     int luxValue = Provider.of<LightProvider>(context).luxValue;
     return MaterialApp(
-      title: 'Photo Album',
+      title: AppConstants.appTitle,
       theme: luxValue < 10 ? ThemeData.dark() : ThemeData.light(),
       home: const LoginPage(),
       debugShowCheckedModeBanner: false,

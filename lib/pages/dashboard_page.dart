@@ -9,6 +9,7 @@ import 'package:photo_album/widgets/widgets.dart';
 import 'package:photo_album/models/models.dart';
 import 'package:photo_album/providers/providers.dart';
 import 'package:photo_album/services/services.dart';
+import 'package:photo_album/constants/constants.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -95,7 +96,7 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Photo Album"),
+        title: const Text(AppConstants.dashboardTitle),
       ),
       body: buildListImage(),
       floatingActionButton: ExpandableFab(
