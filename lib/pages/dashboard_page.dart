@@ -5,7 +5,7 @@ import 'package:fluttertoast/fluttertoast.dart';
 import 'package:provider/provider.dart';
 
 import 'package:photo_album/pages/pages.dart';
-import 'package:photo_album/components/components.dart';
+import 'package:photo_album/widgets/widgets.dart';
 import 'package:photo_album/models/models.dart';
 import 'package:photo_album/providers/providers.dart';
 import 'package:photo_album/services/services.dart';
