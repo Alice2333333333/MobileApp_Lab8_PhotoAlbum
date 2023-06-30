@@ -428,10 +428,10 @@ packages:
     dependency: "direct main"
     description:
       name: light
-      sha256: b4c8f9f1faad2c0b60f53ae0bc78c02a5645edeb889802cfed2137a0a04ed57a
+      sha256: d5c91decb08ca54cde1a15c625472d7a5a1ae43ede96107ac46506ddd8346ed2
       url: "https://pub.dev"
     source: hosted
-    version: "2.1.0"
+    version: "3.0.0"
   lints:
     dependency: transitive
     description:

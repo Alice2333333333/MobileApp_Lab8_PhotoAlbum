@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:light/light.dart';
 
 import 'package:photo_album/pages/pages.dart';
 import 'package:photo_album/providers/providers.dart';
@@ -23,13 +24,16 @@ class MyApp extends StatelessWidget {
 
   final FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
   final FirebaseStorage firebaseStorage = FirebaseStorage.instance;
+  final Light light = Light();
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(
-          create: (_) => LightProvider(),
+        StreamProvider<int>(
+          create: (_) => light.lightSensorStream,
+          initialData: 10,
+          catchError: (_, e) => 10,
         ),
         Provider<ImageDataProvider>(
           create: (_) => ImageDataProvider(
@@ -48,11 +52,11 @@ class Main extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int luxValue = Provider.of<LightProvider>(context).luxValue;
+    final luxValue = context.watch<int>();
     return MaterialApp(
       title: AppConstants.appTitle,
       theme: luxValue < 10 ? ThemeData.dark() : ThemeData.light(),
-      home: const LoginPage(),
+      home: LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }
