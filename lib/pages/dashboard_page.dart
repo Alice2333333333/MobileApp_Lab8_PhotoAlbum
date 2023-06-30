@@ -21,65 +21,78 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   late final ImageDataProvider imageDataProvider =
       context.read<ImageDataProvider>();
+  bool isLoading = false;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.dashboardTitle),
-      ),
-      body: buildListImage(),
-      floatingActionButton: ExpandableFab(
-        distance: 75,
-        children: [
-          ActionButton(
-            onPressed: () => getImage(
-              context,
-              ImageSource.camera,
-            ),
-            icon: const Icon(Icons.camera_alt),
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: const Text(AppConstants.dashboardTitle),
           ),
-          ActionButton(
-            onPressed: () => getImage(
-              context,
-              ImageSource.gallery,
-            ),
-            icon: const Icon(Icons.insert_photo),
+          body: buildListImage(),
+          floatingActionButton: ExpandableFab(
+            distance: 75,
+            children: [
+              ActionButton(
+                onPressed: () => getImage(
+                  context,
+                  ImageSource.camera,
+                ),
+                icon: const Icon(Icons.camera_alt),
+              ),
+              ActionButton(
+                onPressed: () => getImage(
+                  context,
+                  ImageSource.gallery,
+                ),
+                icon: const Icon(Icons.insert_photo),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        Positioned(
+          child: isLoading ? const LoadingView() : const SizedBox.shrink(),
+        ),
+      ],
     );
   }
 
   Future getImage(BuildContext context, ImageSource source) async {
-    final pickedFile =
+    XFile? pickedFile =
         await ImagePicker().pickImage(source: source).catchError((err) {
       Fluttertoast.showToast(msg: err.toString());
       return null;
     });
-    final timestamp = Timestamp.now();
-    final position = await determinePosition();
-    final location = GeoPoint(
-      position.latitude,
-      position.longitude,
-    );
-    final imageData = ImageData(
-      path: pickedFile!.path,
-      name: pickedFile.name,
-      timestamp: timestamp,
-      location: location,
-      isUrl: false,
-    );
-    if (context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DetailPage(
-            imageData: imageData,
-            editMode: true,
-          ),
-        ),
+
+    if (pickedFile != null) {
+      setState(() => isLoading = true);
+
+      final timestamp = Timestamp.now();
+      final position = await determinePosition();
+      final location = GeoPoint(
+        position.latitude,
+        position.longitude,
       );
+      final imageData = ImageData(
+        path: pickedFile.path,
+        name: pickedFile.name,
+        timestamp: timestamp,
+        location: location,
+        isUrl: false,
+      );
+      if (context.mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => DetailPage(
+              imageData: imageData,
+              editMode: true,
+            ),
+          ),
+        ).then((_) => setState(() => isLoading = false));
+      }
     }
   }
 

@@ -31,6 +31,7 @@ class _DetailPageState extends State<DetailPage> {
   late TextEditingController controllerDescr;
   late String dropdownFolderValue;
   late final imageDataProvider = context.read<ImageDataProvider>();
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -55,74 +56,86 @@ class _DetailPageState extends State<DetailPage> {
     final latitude = imageData.location.latitude;
     final longitude = imageData.location.longitude;
     final location = "Latitude: $latitude\nLongitude: $longitude";
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(AppConstants.detailTitle),
-        actions: [
-          deleteButton(),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.only(
-          top: 2.5,
-          bottom: 75.0,
-        ),
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 5.0,
-              vertical: 2.5,
+    return Stack(
+      children: [
+        Scaffold(
+          appBar: AppBar(
+            title: const Text(AppConstants.detailTitle),
+            actions: [
+              if (imageData.isUrl) ...[
+                deleteButton(),
+              ]
+            ],
+          ),
+          body: ListView(
+            padding: const EdgeInsets.only(
+              top: 2.5,
+              bottom: 75.0,
             ),
-            child: imageData.isUrl
-                ? CachedImage(imageUrl: imageData.path)
-                : PickedImage(imagePath: imageData.path),
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5.0,
+                  vertical: 2.5,
+                ),
+                child: imageData.isUrl
+                    ? CachedImage(imageUrl: imageData.path)
+                    : PickedImage(imagePath: imageData.path),
+              ),
+              detailText(
+                "Description:",
+                imageData.description,
+                editMode: editMode,
+              ),
+              detailText(
+                "Folder:",
+                imageData.folder,
+                editMode: editMode,
+                dropdown: editMode,
+              ),
+              detailText(
+                "Taken on:",
+                takenOn,
+              ),
+              detailText(
+                "Location:",
+                location,
+              ),
+            ],
           ),
-          detailText(
-            "Description:",
-            imageData.description,
-            editMode: editMode,
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () async {
+              if (editMode) {
+                FocusScopeNode currentFocus = FocusScope.of(context);
+                if (!currentFocus.hasPrimaryFocus) {
+                  currentFocus.unfocus();
+                }
+                if (imageData.isUrl) {
+                  await updateData();
+                } else {
+                  await addData();
+                }
+              } else {
+                setState(() => editMode = !editMode);
+              }
+            },
+            icon: Icon(
+              editMode ? Icons.save : Icons.edit,
+            ),
+            label: Text(
+              editMode ? "Save" : "Edit",
+            ),
           ),
-          detailText(
-            "Folder:",
-            imageData.folder,
-            editMode: editMode,
-            dropdown: editMode,
-          ),
-          detailText(
-            "Taken on:",
-            takenOn,
-          ),
-          detailText(
-            "Location:",
-            location,
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          if (editMode) {
-            if (imageData.isUrl) {
-              updateData();
-            } else {
-              addData();
-            }
-            Navigator.pop(context);
-          }
-          setState(() {
-            editMode = !editMode;
-          });
-        },
-        icon: Icon(
-          editMode ? Icons.save : Icons.edit,
         ),
-        label: Text(
-          editMode ? "Save" : "Edit",
+        Positioned(
+          child: isLoading ? const LoadingView() : const SizedBox.shrink(),
         ),
-      ),
+      ],
     );
   }
 
   Future addData() async {
+    setState(() => isLoading = true);
     UploadTask uploadTask = imageDataProvider.uploadFile(
       File(imageData.path),
       imageData.name,
@@ -140,16 +153,23 @@ class _DetailPageState extends State<DetailPage> {
       };
 
       imageDataProvider.addDataFirestore(imageData.name, addInfo).then((data) {
+        setState(() => isLoading = false);
+        Navigator.pop(context);
         Fluttertoast.showToast(msg: "Upload successful");
       }).catchError((err) {
+        setState(() => isLoading = false);
+        Navigator.pop(context);
         Fluttertoast.showToast(msg: err.toString());
       });
     } on FirebaseException catch (e) {
+      setState(() => isLoading = false);
+      Navigator.pop(context);
       Fluttertoast.showToast(msg: e.toString());
     }
   }
 
   Future updateData() async {
+    setState(() => isLoading = true);
     try {
       final updateInfo = {
         FirebaseConstants.description: controllerDescr.text,
@@ -159,25 +179,38 @@ class _DetailPageState extends State<DetailPage> {
       imageDataProvider
           .updateDataFirestore(imageData.name, updateInfo)
           .then((data) {
+        setState(() => isLoading = false);
+        Navigator.pop(context);
         Fluttertoast.showToast(msg: "Update successful");
       }).catchError((err) {
+        setState(() => isLoading = false);
+        Navigator.pop(context);
         Fluttertoast.showToast(msg: err.toString());
       });
     } on FirebaseException catch (e) {
+      setState(() => isLoading = false);
+      Navigator.pop(context);
       Fluttertoast.showToast(msg: e.toString());
     }
   }
 
   Future deleteData() async {
+    setState(() => isLoading = true);
     Future deleteTask = imageDataProvider.deleteFile(imageData.name);
     try {
       imageDataProvider.deleteDataFirestore(imageData.name).then((data) async {
         await deleteTask;
+        setState(() => isLoading = false);
+        if (context.mounted) Navigator.of(context).pop();
         Fluttertoast.showToast(msg: "Delete successful");
       }).catchError((err) {
+        setState(() => isLoading = false);
+        if (context.mounted) Navigator.of(context).pop();
         Fluttertoast.showToast(msg: err.toString());
       });
     } on FirebaseException catch (e) {
+      setState(() => isLoading = false);
+      if (context.mounted) Navigator.of(context).pop();
       Fluttertoast.showToast(msg: e.toString());
     }
   }
@@ -229,9 +262,7 @@ class _DetailPageState extends State<DetailPage> {
       isExpanded: true,
       value: dropdownFolderValue,
       onChanged: (String? value) {
-        setState(() {
-          dropdownFolderValue = value!;
-        });
+        setState(() => dropdownFolderValue = value!);
       },
       items: folders.map<DropdownMenuItem<String>>((String value) {
         return DropdownMenuItem<String>(
@@ -256,6 +287,7 @@ class _DetailPageState extends State<DetailPage> {
 
   Future<void> _delete(BuildContext context) {
     return showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
@@ -266,11 +298,9 @@ class _DetailPageState extends State<DetailPage> {
               child: const Text('Cancel'),
             ),
             TextButton(
-              onPressed: () {
-                deleteData();
-                Navigator.of(context)
-                  ..pop()
-                  ..pop();
+              onPressed: () async {
+                Navigator.of(context).pop();
+                await deleteData();
               },
               child: const Text(
                 'Delete',

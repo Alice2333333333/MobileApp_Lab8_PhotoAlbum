@@ -32,8 +32,8 @@ class MyApp extends StatelessWidget {
       providers: [
         StreamProvider<int>(
           create: (_) => light.lightSensorStream,
-          initialData: 10,
-          catchError: (_, e) => 10,
+          initialData: 7,
+          catchError: (_, e) => 7,
         ),
         Provider<ImageDataProvider>(
           create: (_) => ImageDataProvider(
@@ -55,8 +55,8 @@ class Main extends StatelessWidget {
     final luxValue = context.watch<int>();
     return MaterialApp(
       title: AppConstants.appTitle,
-      theme: luxValue < 10 ? ThemeData.dark() : ThemeData.light(),
-      home: LoginPage(),
+      theme: luxValue < 7 ? ThemeData.dark() : ThemeData.light(),
+      home: const LoginPage(),
       debugShowCheckedModeBanner: false,
     );
   }
